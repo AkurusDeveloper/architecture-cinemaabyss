@@ -1,0 +1,69 @@
+@startuml containers
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title "Containers C4 diagram Cinema (Deployed in Kubernetes)"
+
+Person(user, "User", "A person using the platform on web/mobile/TV")
+System_Ext(recommendationExtSystem, "Recommendation System", "External system that returns personalized suggestions")
+System_Boundary(system, "Cinema") {
+Container(webApp, "Web Application", "React.js", "Frontend interface for desktop browsers")
+Container(mobileApp, "Mobile App", "React Native", "Frontend interface for mobile users")
+Container(tvApp, "Smart TV App", "Native/Embedded", "Frontend for smart TV platforms")
+
+Container(k8sIngress, "Kubernetes Ingress + Istio Gateway", "Istio Gateway", "Routes client traffic to backend services via path and headers")
+Container_Boundary(users, "User Service pod") {
+    Container(envoyUser, "Envoy Sidecar", "Envoy", "Service mesh proxy for observability and security")
+    Container(userService, "User Service", "Go", "Handles user authentication and profile management")
+    ContainerDb(usersDB, "Database", "PostgreSQL", "Store users data")
+    Rel(userService, usersDB, "Read/Write", "SQL")
+    Rel(envoyUser, userService, "Proxies request to service")
+}
+
+Container_Boundary(catalog, "Catalog Service pod") {
+    Container(envoyCatalog, "Envoy Sidecar", "Envoy", "Service mesh proxy for observability and security")
+    Container(catalogService, "Catalog Service", "Go", "Manages movies, metadata, ratings, favorites")
+    ContainerDb(catalogDB, "Database", "PostgreSQL", "Store catalog data")
+    Rel(catalogService, catalogDB, "Read/Write", "SQL")
+    Rel(envoyCatalog, catalogService, "Proxies request to service")
+}
+
+Container_Boundary(subscription, "Subscription Service pod") {
+    Container(subscriptionEnvoy, "Envoy Sidecar", "Envoy", "Service mesh proxy for observability and security")
+    Container(subscriptionService, "Subscription Service", "Go", "Manages subscriptions, access rights, discounts")
+    ContainerDb(subscriptionDB, "Database", "PostgreSQL", "Store subscription data")
+    Rel(subscriptionService, subscriptionDB, "Read/Write", "SQL")
+    Rel(subscriptionEnvoy, subscriptionService, "Proxies request to service")
+}
+
+Container_Boundary(payment, "Payment Service pod") {
+    Container(paymentEnvoy, "Envoy Sidecar", "Envoy", "Service mesh proxy for observability and security")
+    Container(paymentService, "Payment Service", "Go", "Processes payments and transactions")
+    ContainerDb(paymentDB, "Database", "PostgreSQL", "Store payment data")
+    Rel(paymentService, paymentDB, "Read/Write", "SQL")
+    Rel(paymentEnvoy, paymentService, "Proxies request to service")
+}
+
+Container_Boundary(recommendation, "Recommendation Service pod") {
+    Container(recommendationEnvoy, "Envoy Sidecar", "Envoy", "Service mesh proxy for observability and security")
+    Container(recommendationProxy, "Recommendation Proxy", "Go", "Fetches and caches data from external recommender")
+    Rel(recommendationEnvoy, recommendationProxy, "Proxies request to service")
+    BiRel(recommendationProxy, recommendationExtSystem, "Communicates via RabbitMQ for suggestions")
+}
+
+Rel(user, webApp, "Uses")
+Rel(user, mobileApp, "Uses")
+Rel(user, tvApp, "Uses")
+
+Rel(webApp, k8sIngress, "Routes via Ingress")
+Rel(mobileApp, k8sIngress, "Routes via Ingress")
+Rel(tvApp, k8sIngress, "Routes via Ingress")
+
+Rel(k8sIngress, envoyUser, "Routes traffic")
+Rel(k8sIngress, envoyCatalog, "Routes traffic")
+Rel(k8sIngress, subscriptionEnvoy, "Routes traffic")
+Rel(k8sIngress, payment, "Routes traffic")
+Rel(k8sIngress, recommendationEnvoy, "Routes traffic")
+}
+
+@enduml
