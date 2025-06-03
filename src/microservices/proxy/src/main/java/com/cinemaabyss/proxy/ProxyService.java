@@ -109,7 +109,9 @@ public class ProxyService {
 
         // Копируем заголовки
         exchange.getRequestHeaders().forEach((key, values) -> {
-            if (!key.equalsIgnoreCase("Host")) { // Не копируем заголовок Host
+            if (!key.equalsIgnoreCase("Host") &&
+                    !key.equalsIgnoreCase("Content-Length") &&
+                    !key.equalsIgnoreCase("Transfer-Encoding")) {
                 for (String value : values) {
                     request.addHeader(key, value);
                 }
