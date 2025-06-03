@@ -29,7 +29,7 @@ spec:
           env:
             - name: EVENTS_SERVICE__PORT
               value: "8082"
-            - name: EVENTS_SERVICE__KAFKA_BROKERS
+            - name: KAFKA_BROKERS
               value: "kafka:9092"
           envFrom:
             - configMapRef:
