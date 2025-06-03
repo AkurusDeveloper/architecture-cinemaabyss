@@ -27,7 +27,7 @@ spec:
           ports:
             - containerPort: 8082
           env:
-            - name: EVENTS_SERVICE__PORT
+            - name: PORT
               value: "8082"
             - name: KAFKA_BROKERS
               value: "kafka:9092"
