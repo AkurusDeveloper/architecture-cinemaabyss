@@ -42,14 +42,21 @@ public abstract class BaseEvent {
         return timestamp.toEpochMilli();
     }
 
-    public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
+    public void setTimestamp(Long timestampMillis) {
+        if (timestampMillis != null) {
+            this.timestamp = Instant.ofEpochMilli(timestampMillis);
+        }
     }
-
     @JsonProperty("timestamp")
     public void setTimestampFromString(String timestamp) {
         if (timestamp != null && !timestamp.isEmpty()) {
-            setTimestamp(Instant.parse(timestamp));
+            try {
+                // Пробуем интерпретировать как число миллисекунд
+                this.timestamp = Instant.ofEpochMilli(Long.parseLong(timestamp));
+            } catch (NumberFormatException e) {
+                // Если не получилось, пробуем как ISO-8601
+                this.timestamp = Instant.parse(timestamp);
+            }
         }
     }
 }

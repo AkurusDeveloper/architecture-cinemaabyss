@@ -1,7 +1,11 @@
 package com.cinemaabyss.events.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class PaymentEvent extends BaseEvent {
+    @JsonProperty("payment_id")
     private Integer paymentId;
+    @JsonProperty("user_id")
     private Integer userId;
     private Double amount;
     private String status;
