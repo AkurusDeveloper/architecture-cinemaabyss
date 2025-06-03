@@ -6,7 +6,7 @@ public class Config {
 
     public Config() {
         this.port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8082"));
-        this.kafkaBrokers = System.getenv().getOrDefault("KAFKA_BROKERS", "localhost:9092");
+        this.kafkaBrokers = System.getenv().getOrDefault("EVENTS_SERVICE__KAFKA_BROKERS", "localhost:9092");
     }
 
     public int getPort() {
