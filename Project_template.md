@@ -245,7 +245,7 @@ cat .docker/config.json | base64
 
   zookeeper-0                       1/1     Running 
 ```
-
+![img_2.png](img_2.png)
   8. Добавим ingress
 
   - добавьте аддон
@@ -265,14 +265,14 @@ cat .docker/config.json | base64
   11. Вызовите https://cinemaabyss.example.com/api/movies
   Вы должны увидеть вывод списка фильмов
   Можно поэкспериментировать со значением   MOVIES_MIGRATION_PERCENT в src/kubernetes/configmap.yaml и убедится, что вызовы movies уходят полностью в новый сервис
-
+![img_3.png](img_3.png)
   12. Запустите тесты из папки tests/postman
   ```bash
    npm run test:kubernetes
   ```
   Часть тестов с health-чек упадет, но создание событий отработает.
   Откройте логи event-service и сделайте скриншот обработки событий
-
+![img_4.png](img_4.png)
 #### Шаг 3
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
 
