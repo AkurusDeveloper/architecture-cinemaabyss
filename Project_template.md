@@ -346,11 +346,11 @@ kafka.common.InconsistentClusterIdException: The Cluster ID OkOjGPrdRimp8nkFohYk
 kubectl get pods -n cinemaabyss
 minikube tunnel
 ```
-
+![img_7.png](img_7.png)![img_5.png](img_5.png)
 Потом вызовите 
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
-
+![img_6.png](img_6.png)
 ## Удаляем все
 
 ```bash
