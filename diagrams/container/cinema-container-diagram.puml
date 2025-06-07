@@ -12,58 +12,94 @@ Container(mobileApp, "Mobile App", "React Native", "Frontend interface for mobil
 Container(tvApp, "Smart TV App", "Native/Embedded", "Frontend for smart TV platforms")
 
 Container(k8sIngress, "Kubernetes Ingress + Istio Gateway", "Istio Gateway", "Routes client traffic to backend services via path and headers")
+
+' BFF для разных клиентов
+Container(webBFF, "Web BFF", "Go", "Backend for web specific features")
+Container(mobileBFF, "Mobile BFF", "Go", "Backend for mobile specific features")
+Container(tvBFF, "TV BFF", "Go", "Backend optimized for smart TV apps")
+
+' S3 для бинарного контента
+ContainerDb(s3Storage, "S3 Object Storage", "MinIO/AWS S3", "Stores binary content like videos, covers, etc.")
+
+' Брокер сообщений
+Container(messageBroker, "Message Broker", "Kafka/RabbitMQ", "Handles asynchronous communication between services")
+
 Container_Boundary(users, "User Service pod") {
     Container(envoyUser, "Envoy Sidecar", "Envoy", "Service mesh proxy for observability and security")
     Container(userService, "User Service", "Go", "Handles user authentication and profile management")
-    ContainerDb(usersDB, "Database", "PostgreSQL", "Store users data")
-    Rel(userService, usersDB, "Read/Write", "SQL")
     Rel(envoyUser, userService, "Proxies request to service")
 }
+' Вынесенная база данных пользователей
+ContainerDb(usersDB, "Users Database", "PostgreSQL", "Store users data")
+Rel(userService, usersDB, "Read/Write", "SQL")
 
 Container_Boundary(catalog, "Catalog Service pod") {
     Container(envoyCatalog, "Envoy Sidecar", "Envoy", "Service mesh proxy for observability and security")
     Container(catalogService, "Catalog Service", "Go", "Manages movies, metadata, ratings, favorites")
-    ContainerDb(catalogDB, "Database", "PostgreSQL", "Store catalog data")
-    Rel(catalogService, catalogDB, "Read/Write", "SQL")
     Rel(envoyCatalog, catalogService, "Proxies request to service")
 }
+' Вынесенная база данных каталога
+ContainerDb(catalogDB, "Catalog Database", "PostgreSQL", "Store catalog metadata")
+Rel(catalogService, catalogDB, "Read/Write", "SQL")
+Rel(catalogService, s3Storage, "Store/retrieve content", "S3 API")
 
 Container_Boundary(subscription, "Subscription Service pod") {
     Container(subscriptionEnvoy, "Envoy Sidecar", "Envoy", "Service mesh proxy for observability and security")
     Container(subscriptionService, "Subscription Service", "Go", "Manages subscriptions, access rights, discounts")
-    ContainerDb(subscriptionDB, "Database", "PostgreSQL", "Store subscription data")
-    Rel(subscriptionService, subscriptionDB, "Read/Write", "SQL")
     Rel(subscriptionEnvoy, subscriptionService, "Proxies request to service")
 }
+' Вынесенная база данных подписок
+ContainerDb(subscriptionDB, "Subscription Database", "PostgreSQL", "Store subscription data")
+Rel(subscriptionService, subscriptionDB, "Read/Write", "SQL")
 
 Container_Boundary(payment, "Payment Service pod") {
     Container(paymentEnvoy, "Envoy Sidecar", "Envoy", "Service mesh proxy for observability and security")
     Container(paymentService, "Payment Service", "Go", "Processes payments and transactions")
-    ContainerDb(paymentDB, "Database", "PostgreSQL", "Store payment data")
-    Rel(paymentService, paymentDB, "Read/Write", "SQL")
     Rel(paymentEnvoy, paymentService, "Proxies request to service")
 }
+' Вынесенная база данных платежей
+ContainerDb(paymentDB, "Payment Database", "PostgreSQL", "Store payment data")
+Rel(paymentService, paymentDB, "Read/Write", "SQL")
 
 Container_Boundary(recommendation, "Recommendation Service pod") {
     Container(recommendationEnvoy, "Envoy Sidecar", "Envoy", "Service mesh proxy for observability and security")
     Container(recommendationProxy, "Recommendation Proxy", "Go", "Fetches and caches data from external recommender")
     Rel(recommendationEnvoy, recommendationProxy, "Proxies request to service")
-    BiRel(recommendationProxy, recommendationExtSystem, "Communicates via RabbitMQ for suggestions")
+    BiRel(recommendationProxy, recommendationExtSystem, "Communicates for suggestions")
 }
 
+' Связи клиентов
 Rel(user, webApp, "Uses")
 Rel(user, mobileApp, "Uses")
 Rel(user, tvApp, "Uses")
 
+' Связи клиентов с BFF
 Rel(webApp, k8sIngress, "Routes via Ingress")
 Rel(mobileApp, k8sIngress, "Routes via Ingress")
 Rel(tvApp, k8sIngress, "Routes via Ingress")
 
-Rel(k8sIngress, envoyUser, "Routes traffic")
-Rel(k8sIngress, envoyCatalog, "Routes traffic")
-Rel(k8sIngress, subscriptionEnvoy, "Routes traffic")
-Rel(k8sIngress, payment, "Routes traffic")
-Rel(k8sIngress, recommendationEnvoy, "Routes traffic")
+' Связи Ingress с BFF
+Rel(k8sIngress, webBFF, "Routes web traffic")
+Rel(k8sIngress, mobileBFF, "Routes mobile traffic")
+Rel(k8sIngress, tvBFF, "Routes TV traffic")
+
+' Связи BFF с сервисами
+Rel(webBFF, envoyUser, "Calls")
+Rel(webBFF, envoyCatalog, "Calls")
+Rel(webBFF, subscriptionEnvoy, "Calls")
+Rel(mobileBFF, envoyUser, "Calls")
+Rel(mobileBFF, envoyCatalog, "Calls")
+Rel(mobileBFF, subscriptionEnvoy, "Calls")
+Rel(tvBFF, envoyUser, "Calls")
+Rel(tvBFF, envoyCatalog, "Calls")
+Rel(tvBFF, subscriptionEnvoy, "Calls")
+
+' Связи с брокером сообщений
+Rel(userService, messageBroker, "Publishes events")
+Rel(catalogService, messageBroker, "Publishes events")
+Rel(subscriptionService, messageBroker, "Publishes/consumes events")
+Rel(paymentService, messageBroker, "Publishes/consumes events")
+Rel(recommendationProxy, messageBroker, "Consumes events")
 }
 
 @enduml
